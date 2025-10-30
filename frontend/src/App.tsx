@@ -10,11 +10,11 @@ import {
   DraggableStateSnapshot,
 } from "@hello-pangea/dnd";
 
-interface Item {
-  id: string;
-  title: string;
-  description: string;
-}
+// interface Item {
+//   id: string;
+//   title: string;
+//   description: string;
+// }
 
 const initialColumns = {
   todo: [
@@ -40,8 +40,8 @@ const App = () => {
     const sourceItems = Array.from(columns[sourceCol]);
     const destItems = Array.from(columns[destCol]);
 
-    const [movedItem] = sourceItems.splice(source.index, 1);
-    destItems.splice(destination.index, 0, movedItem);
+    const [movedItem] = sourceItems.splice(source.index, 1); // delete from source
+    destItems.splice(destination.index, 0, movedItem); // add to destination
 
     setColumns({
       ...columns,
@@ -89,15 +89,7 @@ const App = () => {
                               ...provided.draggableProps.style,
                             }}
                           >
-                            <Card
-                              hoverable
-                              style={{
-                                boxShadow: snapshot.isDragging
-                                  ? "0 2px 12px rgba(0,0,0,0.2)"
-                                  : "none",
-                              }}
-                              title={item.title}
-                            >
+                            <Card hoverable title={item.title}>
                               {item.description}
                             </Card>
                           </div>
