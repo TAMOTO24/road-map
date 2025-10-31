@@ -7,8 +7,8 @@ const app = express();
 const PORT = 5000;
 
 app.use(cors());
-app.use("/board", routes);
 app.use(express.json());
+app.use("/boards", routes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from TypeScript backend!");

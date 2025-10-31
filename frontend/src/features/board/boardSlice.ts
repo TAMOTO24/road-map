@@ -1,20 +1,20 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { fetchBoards } from "./boardThunk.ts";
 
-interface Card {
-  id: string;
+export interface BoardCard {
+  _id: string;
   title: string;
   description: string;
 }
 
-interface Columns {
-  todo: Card[];
-  inProgress: Card[];
-  done: Card[];
+export interface Columns {
+  todo: BoardCard[];
+  inProgress: BoardCard[];
+  done: BoardCard[];
 }
 
 export interface Board {
-  id: string;
+  _id: string;
   name: string;
   columns: Columns;
 }
@@ -38,6 +38,10 @@ export const boardSlice = createSlice({
       state.activeBoardId = action.payload;
     },
 
+    setCurrentBoardId: (state, action: PayloadAction<string>) => {
+      state.activeBoardId = action.payload;
+    },
+
     setBoards: (state, action: PayloadAction<Board[]>) => {
       state.boards = action.payload;
     },
@@ -47,7 +51,7 @@ export const boardSlice = createSlice({
       action: PayloadAction<{ boardId: string; columns: Columns }>
     ) => {
       const { boardId, columns } = action.payload;
-      const board = state.boards.find((b) => b.id === boardId);
+      const board = state.boards.find((b) => b._id === boardId);
       if (board) {
         board.columns = columns;
       }
@@ -63,6 +67,6 @@ export const boardSlice = createSlice({
   },
 });
 
-export const { getCurrent, setBoards, updateBoardColumns } = boardSlice.actions;
+export const { setCurrentBoardId, setBoards, updateBoardColumns } = boardSlice.actions;
 
 export default boardSlice.reducer;

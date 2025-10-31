@@ -20,18 +20,20 @@ export const getBoards = async (req: Request, res: Response) => {
 //   }
 // };
 
-// const updateBoard = async (req: Request, res: Response) => {
-//   try {
-//     const updatedBoard = await Board.findByIdAndUpdate(
-//       req.params.id,
-//       req.body,
-//       { new: true }
-//     );
-//     res.json(updatedBoard);
-//   } catch (error) {
-//     res.status(500).json({ message: "Error updating board" });
-//   }
-// };
+export const updateBoard = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log("Updating board with ID:", id);
+  try {
+    const updatedBoard = await Board.findByIdAndUpdate(
+      id,
+      { columns: req.body.columns },
+      { new: true }
+    );
+    res.json(updatedBoard);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating board" });
+  }
+};
 
 // const deleteBoard = async (req: Request, res: Response) => {
 //   try {
