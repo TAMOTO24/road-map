@@ -1,9 +1,13 @@
 import express, { Request, Response } from "express";
+import routes from "./routes";
 import "./db";
+import cors from "cors";
 
 const app = express();
 const PORT = 5000;
 
+app.use(cors());
+app.use("/board", routes);
 app.use(express.json());
 
 app.get("/", (req: Request, res: Response) => {
