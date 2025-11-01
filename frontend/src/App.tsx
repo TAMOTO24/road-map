@@ -11,6 +11,8 @@ import {
 import { RootState } from "./config/store";
 import { fetchBoards, saveBoardColumns } from "./features/board/boardThunk.ts";
 import { useAppDispatch } from "./config/hooks.ts";
+import ActionCard from "./addNewTextCard/newtextcard.tsx";
+import axios from "axios";
 import {
   DragDropContext,
   Droppable,
@@ -21,6 +23,7 @@ import {
 } from "@hello-pangea/dnd";
 
 const { Search } = Input;
+type ColumnId = "todo" | "inProgress" | "done";
 
 const App = () => {
   const boards: Board[] = useSelector((state: RootState) => state.board.boards);
@@ -31,10 +34,11 @@ const App = () => {
 
   const [columns, setColumns] = useState<Board | undefined>(undefined);
 
-  const actions: React.ReactNode[] = [
-    <DeleteOutlined key="delete" style={{ marginLeft: 8 }} />,
-    <EditOutlined key="edit" style={{ marginLeft: 8 }} />,
-  ];
+  // const actions: React.ReactNode<>[] = [
+  //   <DeleteOutlined key="delete" style={{ marginLeft: 8 }} />,
+  //   <ActionCard initialData={undefined} onSubmit={() => {}} />,
+  //   // <EditOutlined key="edit" style={{ marginLeft: 8 }} />,
+  // ];
 
   useEffect(() => {
     if (boards.length > 0) {
@@ -49,6 +53,55 @@ const App = () => {
   useEffect(() => {
     setColumns(boards.find((b) => String(b._id) === boards[0]?._id));
   }, [boards]);
+
+  // const handleAddCard = (data: BoardCard, columnId?: ColumnId) => {
+  //   if (!columns || !columnId || !columns) return;
+
+  //   console.log("Adding card to column:", columnId, data);
+
+  //   const res = axios.post("http://localhost:5000/api/cards", {
+  //     ...data,
+  //     boardId: columns._id,
+  //     columnId: columnId,
+  //   });
+
+  //   setColumns((prev) => {
+  //     if (!prev) return prev; // если prev undefined, возвращаем тоже undefined
+
+  //     return {
+  //       ...prev,
+  //       columns: {
+  //         ...prev.columns,
+  //         [columnId]: [...prev.columns[columnId], res.data as BoardCard],
+  //       },
+  //       _id: prev._id, // здесь точно string, TypeScript доволен
+  //     };
+  //   });
+  // };
+  const handleAddCard = async (
+    columnId: ColumnId,
+    newCardData: Partial<BoardCard>
+  ) => {
+    try {
+      const res = await axios.post<BoardCard>("/api/cards", newCardData);
+
+      const newCard = res.data;
+
+      setColumns((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          columns: {
+            ...prev.columns,
+            [columnId]: [...prev.columns[columnId], newCard],
+          },
+          _id: prev._id,
+        };
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const onDragEnd = (result: DropResult) => {
     if (!columns) return;
@@ -135,7 +188,18 @@ const App = () => {
                             <Card
                               hoverable
                               title={item.title}
-                              actions={actions}
+                              actions={[
+                                <ActionCard
+                                  key="edit"
+                                  initialData={item}
+                                  onSubmit={() => {}}
+                                />,
+                                <DeleteOutlined
+                                  key="delete"
+                                  // onClick={() => handleDelete(item.id)}
+                                  style={{ color: "red" }}
+                                />,
+                              ]}
                             >
                               {item.description}
                             </Card>
@@ -146,20 +210,7 @@ const App = () => {
                     {provided.placeholder}
 
                     {key === "todo" && (
-                      <Button
-                        type="primary"
-                        size="large"
-                        color="default"
-                        variant="outlined"
-                        icon={<PlusOutlined />}
-                        style={{
-                          alignSelf: "center",
-                          width: "100%",
-                          height: 175,
-                          fontSize: 50,
-                          marginTop: 8,
-                        }}
-                      />
+                      <ActionCard boardType={key} onSubmit={handleAddCard} />
                     )}
                   </div>
                 )}

@@ -67,6 +67,7 @@ export const boardSlice = createSlice({
   },
 });
 
-export const { setCurrentBoardId, setBoards, updateBoardColumns } = boardSlice.actions;
+export const { setCurrentBoardId, setBoards, updateBoardColumns } =
+  boardSlice.actions;
 
 export default boardSlice.reducer;
