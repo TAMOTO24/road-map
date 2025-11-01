@@ -36,8 +36,6 @@ const ActionCard: React.FC<AddNewTextCardProps> = ({
     if (!boardType) return;
     const data = initialData ? { ...initialData, ...values } : { ...values };
 
-    console.log('Submitting data:', data);
-
     onSubmit(boardType, data);
     setIsModalOpen(false);
   };
@@ -46,7 +44,7 @@ const ActionCard: React.FC<AddNewTextCardProps> = ({
     <>
       {!initialData ? (
         <Button
-          type="primary"
+          variant="outlined"
           size="large"
           icon={initialData ? <EditOutlined /> : <PlusOutlined />}
           onClick={showModal}
@@ -59,7 +57,11 @@ const ActionCard: React.FC<AddNewTextCardProps> = ({
           }}
         />
       ) : (
-        <EditOutlined key="edit" style={{ marginLeft: 8 }} />
+        <EditOutlined
+          key="edit"
+          onClick={showModal}
+          style={{ marginLeft: 8 }}
+        />
       )}
 
       <Modal
@@ -77,7 +79,6 @@ const ActionCard: React.FC<AddNewTextCardProps> = ({
           <Form.Item
             label="Title"
             name="title"
-            rules={[{ required: true, message: "Please input your title!" }]}
           >
             <Input placeholder="Give it a name..." />
           </Form.Item>
@@ -85,9 +86,6 @@ const ActionCard: React.FC<AddNewTextCardProps> = ({
           <Form.Item
             label="Description"
             name="description"
-            rules={[
-              { required: true, message: "Please input your description!" },
-            ]}
           >
             <Input.TextArea
               autoSize={{ minRows: 3, maxRows: 5 }}

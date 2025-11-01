@@ -1,5 +1,12 @@
 import express from "express";
-import { getBoards, updateBoard } from "./controller/boardController";
+import {
+  getBoards,
+  updateBoard,
+  createNewCard,
+  updateCard,
+  deleteCard,
+  createBoard
+} from "./controller/boardController";
 
 const routes = express.Router();
 
@@ -10,5 +17,9 @@ routes.use((req, res, next) => {
 
 routes.get("/", getBoards);
 routes.put("/:id", updateBoard);
+routes.put("/card/:id", updateCard);
+routes.post("/newCard", createNewCard);
+routes.delete("/card/:id", deleteCard);
+routes.post("/", createBoard);
 
 export default routes;

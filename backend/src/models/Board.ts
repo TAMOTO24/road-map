@@ -17,12 +17,21 @@ export interface BoardDoc extends Document {
   columns: Columns;
 }
 
+const cardSchema = new Schema<Card>(
+  {
+    _id: { type: String },
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const boardSchema = new Schema<BoardDoc>({
   name: { type: String, required: true },
   columns: {
-    todo: Array,
-    inProgress: Array,
-    done: Array,
+    todo: [cardSchema],
+    inProgress: [cardSchema],
+    done: [cardSchema],
   },
 });
 

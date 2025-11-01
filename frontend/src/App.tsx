@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Input, Button } from "antd";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { Card, Row, Col, Input, Empty } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import {
   Board,
@@ -13,6 +13,7 @@ import { fetchBoards, saveBoardColumns } from "./features/board/boardThunk.ts";
 import { useAppDispatch } from "./config/hooks.ts";
 import ActionCard from "./addNewTextCard/newtextcard.tsx";
 import axios from "axios";
+import CreateNewBoard from "./createNewBoard/createnewboard.tsx";
 import {
   DragDropContext,
   Droppable,
@@ -28,17 +29,9 @@ type ColumnId = "todo" | "inProgress" | "done";
 const App = () => {
   const boards: Board[] = useSelector((state: RootState) => state.board.boards);
   const dispatch = useAppDispatch();
-  // const activeBoardId = useSelector(
-  //   (state: RootState) => state.board.activeBoardId
-  // );
+  const [visible, setVisible] = useState(false);
 
   const [columns, setColumns] = useState<Board | undefined>(undefined);
-
-  // const actions: React.ReactNode<>[] = [
-  //   <DeleteOutlined key="delete" style={{ marginLeft: 8 }} />,
-  //   <ActionCard initialData={undefined} onSubmit={() => {}} />,
-  //   // <EditOutlined key="edit" style={{ marginLeft: 8 }} />,
-  // ];
 
   useEffect(() => {
     if (boards.length > 0) {
@@ -51,39 +44,44 @@ const App = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    setColumns(boards.find((b) => String(b._id) === boards[0]?._id));
+    if (!columns?._id) {
+      setColumns(boards.find((b) => String(b._id) === boards[0]?._id));
+    }
   }, [boards]);
 
-  // const handleAddCard = (data: BoardCard, columnId?: ColumnId) => {
-  //   if (!columns || !columnId || !columns) return;
+  const toggleCreateBoardModal = () => {
+    setVisible(!visible);
+  };
 
-  //   console.log("Adding card to column:", columnId, data);
+  const onSubmitCreateBoardModal = async (name: string) => {
+    try {
+      const res = await axios.post<Board>("http://localhost:5000/boards", {
+        name,
+        columns: { todo: [], inProgress: [], done: [] },
+      });
 
-  //   const res = axios.post("http://localhost:5000/api/cards", {
-  //     ...data,
-  //     boardId: columns._id,
-  //     columnId: columnId,
-  //   });
+      const newBoard = res.data;
+      await dispatch(fetchBoards()).unwrap();
+      dispatch(setCurrentBoardId(newBoard._id));
+      setColumns(newBoard);
+    } catch (error) {
+      console.error("Error creating board:", error);
+    }
+  };
 
-  //   setColumns((prev) => {
-  //     if (!prev) return prev; // если prev undefined, возвращаем тоже undefined
-
-  //     return {
-  //       ...prev,
-  //       columns: {
-  //         ...prev.columns,
-  //         [columnId]: [...prev.columns[columnId], res.data as BoardCard],
-  //       },
-  //       _id: prev._id, // здесь точно string, TypeScript доволен
-  //     };
-  //   });
-  // };
   const handleAddCard = async (
     columnId: ColumnId,
     newCardData: Partial<BoardCard>
   ) => {
     try {
-      const res = await axios.post<BoardCard>("/api/cards", newCardData);
+      const res = await axios.post<BoardCard>(
+        "http://localhost:5000/boards/newCard",
+        {
+          ...newCardData,
+          boardId: columns?._id,
+          columnId: columnId,
+        }
+      );
 
       const newCard = res.data;
 
@@ -103,10 +101,59 @@ const App = () => {
     }
   };
 
+  const handleSearch = (id: string) => {
+    const board = boards.find((b) => String(b._id) === id);
+    if (board) {
+      dispatch(setCurrentBoardId(board._id));
+      setColumns(board);
+    } else {
+      toggleCreateBoardModal();
+    }
+  };
+
+  const handleChangeCard = (columnId: ColumnId, updatedCard: BoardCard) => {
+    if (!columns) return;
+    const updatedCards = columns.columns[columnId].map((card) =>
+      card._id === updatedCard._id ? updatedCard : card
+    );
+
+    axios.put(`http://localhost:5000/boards/card/${columns._id}`, {
+      columnId,
+      cardId: updatedCard._id,
+      title: updatedCard.title,
+      description: updatedCard.description,
+    });
+
+    setColumns({
+      ...columns,
+      columns: {
+        ...columns.columns,
+        [columnId]: updatedCards,
+      },
+    });
+  };
+
+  const handleDeleteCard = (columnId: ColumnId, cardId: string) => {
+    if (!columns) return;
+
+    axios.delete(`http://localhost:5000/boards/card/${columns._id}`, {
+      data: { columnId, cardId },
+    });
+
+    setColumns({
+      ...columns,
+      columns: {
+        ...columns.columns,
+        [columnId]: columns.columns[columnId].filter(
+          (card) => card._id !== cardId
+        ),
+      },
+    });
+  };
+
   const onDragEnd = (result: DropResult) => {
     if (!columns) return;
     const { source, destination } = result;
-    console.log(source, destination);
     if (!destination || source.droppableId == destination.droppableId) return;
 
     const sourceCol = source.droppableId as keyof typeof columns.columns;
@@ -144,81 +191,107 @@ const App = () => {
         allowClear
         enterButton="Load"
         size="large"
-        // onSearch={onSearch}
+        onSearch={handleSearch}
       />
 
-      <h1 style={{ textAlign: "center" }}>{columns?.name}</h1>
+      <h1 style={{ textAlign: "center" }}>
+        <div>{columns?.name}</div>
+        <div style={{ fontSize: 13, color: "#888" }}>{columns?._id}</div>
+      </h1>
 
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Row gutter={14}>
-          {Object.entries(columns?.columns || {}).map(([key, items]) => (
-            <Col span={8} key={key}>
-              <h2 style={{ textTransform: "capitalize" }}>{key}</h2>
-              <Droppable droppableId={key}>
-                {(provided: DroppableProvided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    style={{
-                      background: "#F4F6F8",
-                      height: "100%",
-                      padding: 8,
-                      borderRadius: 8,
-                      border: "1px solid #f0f0f0",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 8,
-                    }}
-                  >
-                    {items.map((item: BoardCard, index: number) => (
-                      <Draggable
-                        key={item._id}
-                        draggableId={item._id}
-                        index={index}
-                      >
-                        {(provided: DraggableProvided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{
-                              ...provided.draggableProps.style,
-                            }}
-                          >
-                            <Card
-                              hoverable
-                              title={item.title}
-                              actions={[
-                                <ActionCard
-                                  key="edit"
-                                  initialData={item}
-                                  onSubmit={() => {}}
-                                />,
-                                <DeleteOutlined
-                                  key="delete"
-                                  // onClick={() => handleDelete(item.id)}
-                                  style={{ color: "red" }}
-                                />,
-                              ]}
+      {columns ? (
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Row gutter={14}>
+            {Object.entries(columns?.columns || {}).map(([key, items]) => (
+              <Col span={8} key={key}>
+                <h2 style={{ textTransform: "capitalize" }}>{key}</h2>
+                <Droppable droppableId={key}>
+                  {(provided: DroppableProvided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      style={{
+                        background: "#F4F6F8",
+                        height: "100%",
+                        padding: 8,
+                        borderRadius: 8,
+                        border: "1px solid #f0f0f0",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                      }}
+                    >
+                      {items.map((item: BoardCard, index: number) => (
+                        <Draggable
+                          key={item._id}
+                          draggableId={item._id}
+                          index={index}
+                        >
+                          {(provided: DraggableProvided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              style={{
+                                ...provided.draggableProps.style,
+                              }}
                             >
-                              {item.description}
-                            </Card>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
+                              <Card
+                                hoverable
+                                title={item.title}
+                                actions={[
+                                  <ActionCard
+                                    boardType={key as ColumnId}
+                                    initialData={item}
+                                    onSubmit={handleChangeCard}
+                                  />,
+                                  <DeleteOutlined
+                                    key="delete"
+                                    onClick={() =>
+                                      handleDeleteCard(
+                                        key as ColumnId,
+                                        item._id
+                                      )
+                                    }
+                                    style={{ color: "red" }}
+                                  />,
+                                ]}
+                              >
+                                {item.description}
+                              </Card>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
 
-                    {key === "todo" && (
-                      <ActionCard boardType={key} onSubmit={handleAddCard} />
-                    )}
-                  </div>
-                )}
-              </Droppable>
-            </Col>
-          ))}
-        </Row>
-      </DragDropContext>
+                      {key === "todo" && (
+                        <ActionCard boardType={key} onSubmit={handleAddCard} />
+                      )}
+                    </div>
+                  )}
+                </Droppable>
+              </Col>
+            ))}
+          </Row>
+        </DragDropContext>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <Empty />
+        </div>
+      )}
+      <CreateNewBoard
+        visible={visible}
+        onCancel={toggleCreateBoardModal}
+        onSubmit={onSubmitCreateBoardModal}
+      />
     </div>
   );
 };
