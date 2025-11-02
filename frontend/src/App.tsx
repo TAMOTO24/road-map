@@ -25,6 +25,7 @@ import {
 
 const { Search } = Input;
 type ColumnId = "todo" | "inProgress" | "done";
+const host = "https://road-map-dp5b.onrender.com";
 
 const App = () => {
   const boards: Board[] = useSelector((state: RootState) => state.board.boards);
@@ -55,7 +56,7 @@ const App = () => {
 
   const onSubmitCreateBoardModal = async (name: string) => {
     try {
-      const res = await axios.post<Board>("http://localhost:5000/boards", {
+      const res = await axios.post<Board>(`${host}/boards`, {
         name,
         columns: { todo: [], inProgress: [], done: [] },
       });
@@ -74,14 +75,11 @@ const App = () => {
     newCardData: Partial<BoardCard>
   ) => {
     try {
-      const res = await axios.post<BoardCard>(
-        "http://localhost:5000/boards/newCard",
-        {
-          ...newCardData,
-          boardId: columns?._id,
-          columnId: columnId,
-        }
-      );
+      const res = await axios.post<BoardCard>(`${host}/boards/newCard`, {
+        ...newCardData,
+        boardId: columns?._id,
+        columnId: columnId,
+      });
 
       const newCard = res.data;
 
@@ -117,7 +115,7 @@ const App = () => {
       card._id === updatedCard._id ? updatedCard : card
     );
 
-    axios.put(`http://localhost:5000/boards/card/${columns._id}`, {
+    axios.put(`${host}/boards/card/${columns._id}`, {
       columnId,
       cardId: updatedCard._id,
       title: updatedCard.title,
@@ -136,7 +134,7 @@ const App = () => {
   const handleDeleteCard = (columnId: ColumnId, cardId: string) => {
     if (!columns) return;
 
-    axios.delete(`http://localhost:5000/boards/card/${columns._id}`, {
+    axios.delete(`${host}/boards/card/${columns._id}`, {
       data: { columnId, cardId },
     });
 
@@ -153,7 +151,7 @@ const App = () => {
 
   const deleteBoard = async (boardId: string) => {
     try {
-      await axios.delete(`http://localhost:5000/boards/${boardId}`);
+      await axios.delete(`${host}/boards/${boardId}`);
       dispatch(fetchBoards());
       setColumns(undefined);
     } catch (error) {
@@ -207,15 +205,17 @@ const App = () => {
       <h1 style={{ textAlign: "center" }}>
         <div>{columns?.name}</div>
         <div style={{ fontSize: 13, color: "#888" }}>{columns?._id}</div>
-        <Button
-          type="primary"
-          color="danger"
-          variant="outlined"
-          icon={<DeleteOutlined />}
-          onClick={() => deleteBoard(columns?._id || "")}
-        >
-          Delete
-        </Button>
+        {columns && (
+          <Button
+            type="primary"
+            color="danger"
+            variant="outlined"
+            icon={<DeleteOutlined />}
+            onClick={() => deleteBoard(columns?._id || "")}
+          >
+            Delete
+          </Button>
+        )}
       </h1>
 
       {columns ? (
