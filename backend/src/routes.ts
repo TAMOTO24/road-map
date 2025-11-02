@@ -5,7 +5,8 @@ import {
   createNewCard,
   updateCard,
   deleteCard,
-  createBoard
+  createBoard,
+  deleteBoard,
 } from "./controller/boardController";
 
 const routes = express.Router();
@@ -21,5 +22,6 @@ routes.put("/card/:id", updateCard);
 routes.post("/newCard", createNewCard);
 routes.delete("/card/:id", deleteCard);
 routes.post("/", createBoard);
+routes.delete("/:id", deleteBoard);
 
 export default routes;

@@ -7,7 +7,11 @@ interface CardModalProps {
   onSubmit: (name: string) => void;
 }
 
-const CreateNewBoard: React.FC<CardModalProps> = ({ visible, onCancel, onSubmit }) => {
+const CreateNewBoard: React.FC<CardModalProps> = ({
+  visible,
+  onCancel,
+  onSubmit,
+}) => {
   const [form] = Form.useForm();
 
   const handleFinish = (values: { name: string }) => {

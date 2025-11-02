@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Input, Empty } from "antd";
+import { Card, Row, Col, Input, Empty, Button } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import {
@@ -151,6 +151,16 @@ const App = () => {
     });
   };
 
+  const deleteBoard = async (boardId: string) => {
+    try {
+      await axios.delete(`http://localhost:5000/boards/${boardId}`);
+      dispatch(fetchBoards());
+      setColumns(undefined);
+    } catch (error) {
+      console.error("Error deleting board:", error);
+    }
+  };
+
   const onDragEnd = (result: DropResult) => {
     if (!columns) return;
     const { source, destination } = result;
@@ -197,6 +207,15 @@ const App = () => {
       <h1 style={{ textAlign: "center" }}>
         <div>{columns?.name}</div>
         <div style={{ fontSize: 13, color: "#888" }}>{columns?._id}</div>
+        <Button
+          type="primary"
+          color="danger"
+          variant="outlined"
+          icon={<DeleteOutlined />}
+          onClick={() => deleteBoard(columns?._id || "")}
+        >
+          Delete
+        </Button>
       </h1>
 
       {columns ? (

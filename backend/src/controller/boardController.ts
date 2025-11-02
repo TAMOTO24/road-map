@@ -120,3 +120,16 @@ export const updateBoard = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error updating board" });
   }
 };
+
+export const deleteBoard = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const deletedBoard = await Board.findByIdAndDelete(id);
+    if (!deletedBoard) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+    res.json({ message: "Board deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting board" });
+  }
+};

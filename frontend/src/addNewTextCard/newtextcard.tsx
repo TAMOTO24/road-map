@@ -76,17 +76,11 @@ const ActionCard: React.FC<AddNewTextCardProps> = ({
           onFinish={handleFinish}
           initialValues={initialData}
         >
-          <Form.Item
-            label="Title"
-            name="title"
-          >
+          <Form.Item label="Title" name="title">
             <Input placeholder="Give it a name..." />
           </Form.Item>
 
-          <Form.Item
-            label="Description"
-            name="description"
-          >
+          <Form.Item label="Description" name="description">
             <Input.TextArea
               autoSize={{ minRows: 3, maxRows: 5 }}
               placeholder="Type your text here..."
