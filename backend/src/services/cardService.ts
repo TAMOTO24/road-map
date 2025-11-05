@@ -1,5 +1,5 @@
-import { Board } from "../models/Board.js";
-import { Card } from "../types/board.types.js";
+import { Board } from "../models/Board";
+import { Card } from "../types/board.types";
 
 export const createCard = async (
   boardId: string,

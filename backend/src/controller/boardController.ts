@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import * as boardService from "../services/boardService.js";
+import * as boardService from "../services/boardService";
 
 export const getBoards = async (
   req: Request,

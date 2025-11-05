@@ -1,5 +1,5 @@
-import { Board } from "../models/Board.js";
-import { BoardDoc } from "../types/board.types.js";
+import { Board } from "../models/Board";
+import { BoardDoc } from "../types/board.types";
 
 export const getBoards = async (): Promise<BoardDoc[]> => {
   return await Board.find();

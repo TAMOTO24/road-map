@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import routes from "./routes/index";
 import { errorHandler } from "./middleware/errorHandler";
+import listEndpoints from "express-list-endpoints";
 import "./db";
 import cors from "cors";
 
@@ -18,4 +19,6 @@ app.get("/", (req: Request, res: Response) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
+  console.log("Registered routes:", listEndpoints(app));
 });
+// console.log("Registered routes:", listEndpoints(app));

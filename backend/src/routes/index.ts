@@ -4,7 +4,7 @@ import CardRoute from "./cards";
 
 const routes = express.Router();
 
-routes.use("/boards", BoardRoute);
-routes.use("/cards", CardRoute);
+routes.use(BoardRoute);
+routes.use(CardRoute);
 
 export default routes;
