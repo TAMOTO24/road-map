@@ -75,7 +75,7 @@ const App = () => {
     newCardData: Partial<BoardCard>
   ) => {
     try {
-      const res = await axios.post<BoardCard>(`${host}/boards/newCard`, {
+      const res = await axios.post<BoardCard>(`${host}/${columns?._id}/cards`, {
         ...newCardData,
         boardId: columns?._id,
         columnId: columnId,
@@ -115,9 +115,8 @@ const App = () => {
       card._id === updatedCard._id ? updatedCard : card
     );
 
-    axios.put(`${host}/boards/card/${columns._id}`, {
+    axios.put(`${host}/${columns?._id}/cards/${updatedCard._id}`, {
       columnId,
-      cardId: updatedCard._id,
       title: updatedCard.title,
       description: updatedCard.description,
     });
@@ -134,8 +133,8 @@ const App = () => {
   const handleDeleteCard = (columnId: ColumnId, cardId: string) => {
     if (!columns) return;
 
-    axios.delete(`${host}/boards/card/${columns._id}`, {
-      data: { columnId, cardId },
+    axios.delete(`${host}/${columns?._id}/cards/${cardId}`, {
+      data: { columnId },
     });
 
     setColumns({

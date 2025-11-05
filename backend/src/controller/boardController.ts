@@ -1,135 +1,60 @@
-import { Board, BoardDoc, Card } from "../models/Board";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
+import * as boardService from "../services/boardService.js";
 
-export const getBoards = async (req: Request, res: Response) => {
-  try {
-    const boards: BoardDoc[] = await Board.find();
-    res.json(boards);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching boards" });
-  }
+export const getBoards = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const boards = await boardService.getBoards();
+
+  if (!boards) return next(new Error("Boards not found"));
+
+  res.json(boards);
 };
 
-export const createBoard = async (req: Request, res: Response) => {
+export const createBoard = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { name, columns } = req.body;
-  console.log("Creating board with name:", name, columns);
-  try {
-    const newBoard = new Board({ name, columns });
-    await newBoard.save();
-    res.status(201).json(newBoard);
-  } catch (error) {
-    res.status(500).json({ message: `Error creating board: ${error}` });
-  }
+  const newBoard = await boardService.createBoard(name, columns);
+
+  if (!newBoard) return next(new Error("Board creation failed"));
+
+  res.status(201).json(newBoard);
 };
 
-export const createNewCard = async (req: Request, res: Response) => {
-  const { boardId, columnId, title, description } = req.body;
+export const updateBoard = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { boardId } = req.params;
 
-  try {
-    const board = await Board.findById(boardId);
-    if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-    }
+  if (!boardId) return next(new Error("Board ID is required"));
 
-    const newCard: Card = {
-      _id: new Date().getTime().toString(),
-      title,
-      description,
-    };
-    const key = columnId as keyof typeof board.columns;
-    board.columns[key].push(newCard);
+  const updatedBoard = await boardService.updateBoard(
+    boardId,
+    req.body.columns
+  );
 
-    await board.save();
-    res.status(201).json(newCard);
-  } catch (error) {
-    res.status(500).json({ message: "Error creating card" });
-  }
+  if (!updatedBoard) return next(new Error("Board not found"));
+
+  res.json(updatedBoard);
 };
 
-export const deleteCard = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { columnId, cardId } = req.body;
-  try {
-    const board = await Board.findById(id);
-    if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-    }
-    const columnKey = columnId as keyof typeof board.columns;
-    const cardIndex = board.columns[columnKey].findIndex(
-      (card) => card._id === cardId
-    );
+export const deleteBoard = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { boardId } = req.params;
+  if (!boardId) return next(new Error("Board ID is required"));
 
-    if (cardIndex === -1) {
-      return res.status(404).json({ message: "Card not found" });
-    }
+  const deleted = await boardService.deleteBoard(boardId);
+  if (!deleted) return next(new Error("Board not found"));
 
-    board.columns[columnKey].splice(cardIndex, 1);
-    await board.save();
-    res.json(board);
-  } catch (error) {
-    res.status(500).json({ message: `Error deleting card: ${error}` });
-  }
-};
-
-export const updateCard = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { columnId, cardId, title, description } = req.body;
-  try {
-    const updatedCard = await Board.findById(id);
-
-    if (!updatedCard) {
-      return res.status(404).json({ message: "Board not found" });
-    }
-    const columnKey = columnId as keyof typeof updatedCard.columns;
-    const cardIndex = updatedCard.columns[columnKey].findIndex(
-      (card) => card._id === cardId
-    );
-
-    if (cardIndex === -1) {
-      return res.status(404).json({ message: "Card not found" });
-    }
-    if (
-      !updatedCard.columns[columnKey] ||
-      !updatedCard.columns[columnKey][cardIndex]
-    ) {
-      return res.status(404).json({ message: "Card not found" });
-    }
-    updatedCard.columns[columnKey][cardIndex] = {
-      _id: updatedCard.columns[columnKey][cardIndex]._id,
-      title,
-      description,
-    };
-    await updatedCard.save();
-    res.json(updatedCard);
-  } catch (error) {
-    res.status(500).json({ message: `Error updating card: ${error}` });
-  }
-};
-
-export const updateBoard = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  console.log("Updating board with ID:", id);
-  try {
-    const updatedBoard = await Board.findByIdAndUpdate(
-      id,
-      { columns: req.body.columns },
-      { new: true }
-    );
-    res.json(updatedBoard);
-  } catch (error) {
-    res.status(500).json({ message: "Error updating board" });
-  }
-};
-
-export const deleteBoard = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  try {
-    const deletedBoard = await Board.findByIdAndDelete(id);
-    if (!deletedBoard) {
-      return res.status(404).json({ message: "Board not found" });
-    }
-    res.json({ message: "Board deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting board" });
-  }
+  res.json({ message: "Board deleted successfully" });
 };
